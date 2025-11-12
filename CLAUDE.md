@@ -2,9 +2,67 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-If the user's prompt starts with “EP:”, then the user wants to enhance the prompt. Read the PROMPT_ENHANCER.md file and follow the guidelines to enhance the user's prompt. Show the user the enhancement and get their permission to run it before taking action on the enhanced prompt.
+If the user's prompt starts with "EP:", then the user wants to enhance the prompt. Read the PROMPT_ENHANCER.md file and follow the guidelines to enhance the user's prompt. Show the user the enhancement and get their permission to run it before taking action on the enhanced prompt.
 
 The enhanced prompts will follow the language of the original prompt (e.g., Korean prompt input will output Korean prompt enhancements, English prompt input will output English prompt enhancements, etc.)
+
+---
+
+## 📋 프로젝트 개요 (Project Summary)
+
+### 🎯 핵심 목적
+Claude Code의 대화 히스토리(`.jsonl` 파일)를 읽고 분석할 수 있는 크로스 플랫폼 데스크톱 애플리케이션
+
+### 🛠️ 기술 스택
+- **Frontend**: React 18 + TypeScript + Vite
+- **Backend**: Rust + Tauri v2
+- **UI Framework**: Tailwind CSS + Radix UI Components
+- **State Management**: Zustand
+- **Performance**: react-window (가상 스크롤링)
+
+### 🏗️ 아키텍처 개요
+```
+┌─────────────────────────────────────┐
+│  React Frontend (TypeScript)        │
+│  - Zustand Store (상태 관리)         │
+│  - Virtual Scrolling (성능 최적화)    │
+│  - Radix UI + Tailwind CSS          │
+└──────────────┬──────────────────────┘
+               │ Tauri IPC
+┌──────────────▼──────────────────────┐
+│  Rust Backend (Tauri Commands)      │
+│  - JSONL 파일 파싱                   │
+│  - 프로젝트/세션 스캔                 │
+│  - 메시지 검색 및 필터링               │
+└─────────────────────────────────────┘
+               │
+┌──────────────▼──────────────────────┐
+│  ~/.claude/projects/                │
+│  ├── [project-name]/                │
+│  │   └── *.jsonl (대화 히스토리)     │
+└─────────────────────────────────────┘
+```
+
+### 🚀 주요 기능
+1. **프로젝트/세션 탐색**: `~/.claude` 디렉토리의 모든 프로젝트와 세션을 트리 구조로 표시
+2. **메시지 뷰어**: 대화 내역을 시간순으로 표시 (가상 스크롤링으로 대용량 데이터 처리)
+3. **도구 사용 분석**: Tool use/result, 파일 읽기/쓰기, 명령 실행 결과 등을 구조화하여 표시
+4. **토큰 사용량 추적**: Assistant 메시지의 입력/출력 토큰, 캐시 사용량 표시
+5. **메시지 검색**: 전체 대화 내역에서 키워드 검색
+
+### 📊 데이터 소스
+- **위치**: `~/.claude/projects/[project-name]/*.jsonl`
+- **형식**: JSONL (줄당 하나의 JSON 객체)
+- **메시지 타입**: `user`, `assistant`, `system`, `summary`
+- **콘텐츠 타입**: `text`, `tool_use`, `tool_result`, `thinking`, `image` (일부 미지원)
+
+### 🎨 UI 특징
+- 주로 한국어 인터페이스
+- Claude 브랜드 컬러 사용 (Tailwind 커스텀 설정)
+- 반응형 레이아웃
+- 다크 모드 미지원 (현재)
+
+---
 
 ## Principal
 
