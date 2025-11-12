@@ -48,7 +48,7 @@ A cross-platform desktop application for browsing and analyzing Claude Code conv
 2. **Message Viewer**: Show conversation history chronologically (virtual scrolling for large datasets)
 3. **Tool Usage Analysis**: Display tool use/results, file operations, and command execution results in structured format
 4. **Token Usage Tracking**: Show input/output tokens and cache usage from assistant messages
-5. **Message Search**: Keyword search across entire conversation history
+5. **Advanced Search**: Multilingual fuzzy search (Chinese, Japanese, Korean, English) with Tantivy full-text indexing and incremental updates
 
 ### 📊 Data Source
 - **Location**: `~/.claude/projects/[project-name]/*.jsonl`
@@ -106,8 +106,55 @@ Claude Code History Viewer is a Tauri-based desktop application that allows user
   - `scan_projects` - Scans for all Claude projects
   - `load_project_sessions` - Loads sessions for a specific project
   - `load_session_messages` - Loads messages from a JSONL file
-  - `search_messages` - Searches across all messages
+  - `search_messages` - Legacy simple text search (deprecated)
+  - **Search Commands** (new):
+    - `init_search_index` - Initialize Tantivy search index
+    - `build_search_index` - Build/rebuild index with incremental support
+    - `search_messages_fuzzy` - Multilingual fuzzy search with relevance ranking
+    - `get_search_index_stats` - Get indexing statistics
 - **Data Structure**: Reads JSONL files containing conversation history from `~/.claude/projects/`
+
+### Search Module (`src-tauri/src/search/`)
+
+The search module provides production-grade full-text search capabilities:
+
+#### Architecture
+- **indexer.rs**: Core Tantivy-based search indexer with incremental update support
+- **tokenizer.rs**: Multilingual tokenizer supporting:
+  - **Chinese**: jieba-rs for word segmentation
+  - **Japanese**: lindera with IPADIC dictionary
+  - **Korean**: lindera with KO-DIC dictionary
+  - **English**: Standard whitespace tokenization
+  - **Code preservation**: Special handling for code blocks and technical terms
+- **metadata.rs**: Index progress tracking for resumable indexing
+
+#### Key Features
+1. **Incremental Indexing**:
+   - Tracks last indexed line for each file
+   - Only indexes new content when files are appended
+   - Stores metadata in `~/.claude/search_index/metadata.json`
+
+2. **Language Auto-Detection**:
+   - Detects character ranges to identify language
+   - Applies appropriate tokenizer for each segment
+   - Handles mixed-language content seamlessly
+
+3. **Resume Capability**:
+   - Saves indexing progress after each file
+   - Can resume interrupted indexing on next startup
+   - Detects file modifications and triggers full reindex
+
+4. **Performance**:
+   - Uses memory-mapped index files
+   - 50MB indexing buffer for batch writes
+   - Efficient BM25 ranking for search results
+
+#### Index Storage
+- **Location**: `~/.claude/search_index/`
+- **Contents**:
+  - Tantivy index files (segments, meta.json, etc.)
+  - `metadata.json` - Progress tracking
+  - Typical size: 10-30% of original JSONL data
 
 ## Raw Message Structure
 
@@ -477,6 +524,14 @@ Not Yet Supported:
 
 ### Recent Updates
 
+- **Advanced Search Implementation (January 2025)**:
+  - Added Tantivy-based full-text search with multilingual support (Chinese, Japanese, Korean, English)
+  - Implemented incremental indexing with resume capability for efficient updates
+  - Created custom multilingual tokenizer with automatic language detection
+  - Index stored in `~/.claude/search_index/` with progress tracking in `metadata.json`
+  - New Tauri commands: `init_search_index`, `build_search_index`, `search_messages_fuzzy`, `get_search_index_stats`
+  - Search module structure: `indexer.rs`, `tokenizer.rs`, `metadata.rs`
+
 - **Data Structure & Type Correction (June 2025)**:
   - Performed a deep analysis of `.jsonl` log files in the `~/.claude` directory to verify the exact data structure.
   - Added a `Raw Message Structure` section to this document to accurately model the nested `message` object and include assistant-specific metadata (`id`, `model`, `stop_reason`, `usage`).
@@ -494,11 +549,17 @@ Not Yet Supported:
 
 ### Dependencies Added
 
+**Frontend:**
 - `react-window` - Virtual scrolling for performance
 - `react-window-infinite-loader` - Infinite scroll support
 - `react-virtualized-auto-sizer` - Responsive height calculation
 - `@types/react-window` - TypeScript definitions
 - `@types/react-window-infinite-loader` - TypeScript definitions
+
+**Backend (Rust):**
+- `tantivy` 0.22 - Full-text search engine with inverted index
+- `jieba-rs` 0.7 - Chinese word segmentation
+- `lindera` 0.33 - Japanese (IPADIC) and Korean (KO-DIC) tokenization
 
 ### Known Issues
 

@@ -1,8 +1,9 @@
 mod models;
 mod commands;
 mod utils;
+mod search;
 
-use crate::commands::{project::*, session::*, stats::*, update::*, secure_update::*, feedback::*};
+use crate::commands::{project::*, session::*, stats::*, update::*, secure_update::*, feedback::*, search::*};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -15,8 +16,9 @@ pub fn run() {
         .plugin(tauri_plugin_http::init())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_os::init())
+        .manage(SearchIndexerState::new())
         .invoke_handler(tauri::generate_handler![
-                        get_claude_folder_path,
+            get_claude_folder_path,
             validate_claude_folder,
             scan_projects,
             load_project_sessions,
@@ -33,7 +35,12 @@ pub fn run() {
             verify_download_integrity,
             send_feedback,
             get_system_info,
-            open_github_issues
+            open_github_issues,
+            // New search commands
+            init_search_index,
+            build_search_index,
+            search_messages_fuzzy,
+            get_search_index_stats
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

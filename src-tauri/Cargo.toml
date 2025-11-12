@@ -43,5 +43,10 @@ urlencoding = "2.1"
 sha2 = "0.10.8"
 hex = "0.4.3"
 
+# Search indexing dependencies
+tantivy = "0.22"
+jieba-rs = "0.7"
+lindera = { version = "0.33", features = ["ipadic", "ko-dic"] }
+
 [dev-dependencies]
 tempfile = "3.10.1"
