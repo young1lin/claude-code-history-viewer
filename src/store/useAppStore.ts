@@ -13,6 +13,9 @@ import {
   type SessionComparison,
   type AppError,
   AppErrorType,
+  type SearchResult,
+  type SearchIndexStats,
+  type IndexingStats,
 } from "../types";
 import {
   type AnalyticsState,
@@ -36,6 +39,14 @@ interface AppStore extends AppState {
 
   // Analytics state
   analytics: AnalyticsState;
+
+  // Search state
+  fuzzySearchResults: SearchResult[];
+  isSearching: boolean;
+  searchIndexStats: SearchIndexStats | null;
+  isIndexing: boolean;
+  indexingStats: IndexingStats | null;
+  isSearchPanelOpen: boolean;
 
   // Actions
   initializeApp: () => Promise<void>;
@@ -70,6 +81,14 @@ interface AppStore extends AppState {
   setAnalyticsSessionComparisonError: (error: string | null) => void;
   resetAnalytics: () => void;
   clearAnalyticsErrors: () => void;
+
+  // Fuzzy search actions
+  initSearchIndex: () => Promise<void>;
+  buildSearchIndex: () => Promise<void>;
+  searchMessagesFuzzy: (query: string, limit?: number) => Promise<void>;
+  getSearchIndexStats: () => Promise<void>;
+  setSearchPanelOpen: (open: boolean) => void;
+  clearSearch: () => void;
 }
 
 const DEFAULT_PAGE_SIZE = 20; // 초기 로딩 시 20개 메시지만 로드하여 빠른 로딩
@@ -104,6 +123,14 @@ export const useAppStore = create<AppStore>((set, get) => ({
 
   // Analytics state
   analytics: initialAnalyticsState,
+
+  // Search state
+  fuzzySearchResults: [],
+  isSearching: false,
+  searchIndexStats: null,
+  isIndexing: false,
+  indexingStats: null,
+  isSearchPanelOpen: false,
 
   // Actions
   initializeApp: async () => {
@@ -598,5 +625,86 @@ export const useAppStore = create<AppStore>((set, get) => ({
         sessionComparisonError: null,
       },
     }));
+  },
+
+  // Fuzzy search actions
+  initSearchIndex: async () => {
+    const { claudePath } = get();
+    if (!claudePath) return;
+
+    try {
+      await invoke("init_search_index", { claudePath });
+      console.log("Search index initialized");
+    } catch (error) {
+      console.error("Failed to initialize search index:", error);
+      set({ error: { type: AppErrorType.UNKNOWN, message: String(error) } });
+    }
+  },
+
+  buildSearchIndex: async () => {
+    const { claudePath } = get();
+    if (!claudePath) return;
+
+    set({ isIndexing: true });
+    try {
+      const stats = await invoke<IndexingStats>("build_search_index", {
+        claudePath,
+      });
+      set({ indexingStats: stats, isIndexing: false });
+      console.log("Search index built:", stats);
+
+      // Update index stats after building
+      await get().getSearchIndexStats();
+    } catch (error) {
+      console.error("Failed to build search index:", error);
+      set({
+        error: { type: AppErrorType.UNKNOWN, message: String(error) },
+        isIndexing: false
+      });
+    }
+  },
+
+  searchMessagesFuzzy: async (query: string, limit = 50) => {
+    if (!query.trim()) {
+      set({ fuzzySearchResults: [], searchQuery: "" });
+      return;
+    }
+
+    set({ isSearching: true, searchQuery: query });
+    try {
+      const results = await invoke<SearchResult[]>("search_messages_fuzzy", {
+        query,
+        limit,
+      });
+      set({ fuzzySearchResults: results, isSearching: false });
+    } catch (error) {
+      console.error("Fuzzy search failed:", error);
+      set({
+        error: { type: AppErrorType.UNKNOWN, message: String(error) },
+        isSearching: false
+      });
+    }
+  },
+
+  getSearchIndexStats: async () => {
+    try {
+      const stats = await invoke<SearchIndexStats>("get_search_index_stats");
+      set({ searchIndexStats: stats });
+    } catch (error) {
+      console.error("Failed to get search index stats:", error);
+      // Don't set error state for stats retrieval failure
+    }
+  },
+
+  setSearchPanelOpen: (open: boolean) => {
+    set({ isSearchPanelOpen: open });
+  },
+
+  clearSearch: () => {
+    set({
+      fuzzySearchResults: [],
+      searchQuery: "",
+      isSearching: false
+    });
   },
 }));

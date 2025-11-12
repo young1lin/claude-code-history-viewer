@@ -4,6 +4,8 @@ import { MessageViewer } from "./components/MessageViewer";
 import { TokenStatsViewer } from "./components/TokenStatsViewer";
 import { AnalyticsDashboard } from "./components/AnalyticsDashboard";
 import { SimpleUpdateManager } from "./components/SimpleUpdateManager";
+import { SearchPanel } from "./components/SearchPanel";
+import { SearchResults } from "./components/SearchResults";
 import { useAppStore } from "./store/useAppStore";
 import { useAnalytics } from "./hooks/useAnalytics";
 
@@ -34,10 +36,14 @@ function App() {
     error,
     sessionTokenStats,
     projectTokenStats,
+    isSearchPanelOpen,
+    fuzzySearchResults,
+    searchQuery,
     initializeApp,
     selectProject,
     selectSession,
     loadMoreMessages,
+    setSearchPanelOpen,
   } = useAppStore();
 
   const {
@@ -69,6 +75,23 @@ function App() {
         initializeApp();
       });
   }, [initializeApp, loadLanguage]);
+
+  // Keyboard shortcut for search (Ctrl+K or Cmd+K)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "k") {
+        e.preventDefault();
+        setSearchPanelOpen(!isSearchPanelOpen);
+      }
+      // ESC to close search panel
+      if (e.key === "Escape" && isSearchPanelOpen) {
+        setSearchPanelOpen(false);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isSearchPanelOpen, setSearchPanelOpen]);
 
   // i18n 언어 변경 감지
   useEffect(() => {
@@ -197,6 +220,9 @@ function App() {
 
           {/* Main Content Area */}
           <div className="w-full flex flex-col relative">
+            {/* Search Panel */}
+            <SearchPanel />
+
             {/* Content Header */}
             {(selectedSession ||
               computed.isTokenStatsView ||
@@ -258,7 +284,9 @@ function App() {
 
             {/* Content */}
             <div className="flex-1 overflow-hidden">
-              {computed.isAnalyticsView ? (
+              {isSearchPanelOpen && searchQuery ? (
+                <SearchResults />
+              ) : computed.isAnalyticsView ? (
                 <div className="h-full overflow-y-auto">
                   <AnalyticsDashboard />
                 </div>
@@ -291,7 +319,7 @@ function App() {
                       {tComponents("session.select")}
                     </p>
                     <p className="text-sm">
-                      {tComponents("session.selectDescription")}
+                      {isSearchPanelOpen ? "Start searching..." : tComponents("session.selectDescription")}
                     </p>
                   </div>
                 </div>

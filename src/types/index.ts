@@ -134,6 +134,35 @@ export interface SearchFilters {
   hasFileChanges?: boolean;
 }
 
+// Search result from Tantivy index
+export interface SearchResult {
+  uuid: string;
+  session_id: string;
+  file_path: string;
+  content: string;
+  message_type: string;
+  timestamp: string;
+  line_number: number;
+}
+
+// Search index statistics
+export interface SearchIndexStats {
+  total_files: number;
+  total_lines_indexed: number;
+  total_size_bytes: number;
+  last_full_index: string | null;
+}
+
+// Indexing statistics
+export interface IndexingStats {
+  files_indexed: number;
+  files_incrementally_indexed: number;
+  files_failed: number;
+  lines_indexed: number;
+  messages_indexed: number;
+  duration_ms: number;
+}
+
 export interface MessageNode {
   message: ClaudeMessage;
   children: MessageNode[];

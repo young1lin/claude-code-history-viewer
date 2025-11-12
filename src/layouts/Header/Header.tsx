@@ -4,6 +4,7 @@ import {
   BarChart3,
   MessageSquare,
   Activity,
+  Search,
 } from "lucide-react";
 
 import { TooltipButton } from "@/shared/TooltipButton";
@@ -24,7 +25,9 @@ export const Header = () => {
     selectedProject,
     selectedSession,
     isLoadingMessages,
+    isSearchPanelOpen,
     refreshCurrentSession,
+    setSearchPanelOpen,
   } = useAppStore();
 
   const {
@@ -98,6 +101,21 @@ export const Header = () => {
           )}
 
           <div className="flex items-center space-x-2">
+            <TooltipButton
+              content="Search Messages (Ctrl+K)"
+              onClick={() => setSearchPanelOpen(!isSearchPanelOpen)}
+              className={cn(
+                "p-2 rounded-lg transition-colors",
+                isSearchPanelOpen
+                  ? "bg-claude-100 dark:bg-claude-900"
+                  : COLORS.ui.interactive.hover
+              )}
+            >
+              <Search
+                className={cn("w-5 h-5", COLORS.ui.text.primary)}
+              />
+            </TooltipButton>
+
             {selectedProject && (
               <>
                 <TooltipButton
