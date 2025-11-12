@@ -8,59 +8,59 @@ The enhanced prompts will follow the language of the original prompt (e.g., Kore
 
 ---
 
-## 📋 프로젝트 개요 (Project Summary)
+## 📋 Project Summary
 
-### 🎯 핵심 목적
-Claude Code의 대화 히스토리(`.jsonl` 파일)를 읽고 분석할 수 있는 크로스 플랫폼 데스크톱 애플리케이션
+### 🎯 Purpose
+A cross-platform desktop application for browsing and analyzing Claude Code conversation history stored in `.jsonl` files.
 
-### 🛠️ 기술 스택
+### 🛠️ Tech Stack
 - **Frontend**: React 18 + TypeScript + Vite
 - **Backend**: Rust + Tauri v2
 - **UI Framework**: Tailwind CSS + Radix UI Components
 - **State Management**: Zustand
-- **Performance**: react-window (가상 스크롤링)
+- **Performance**: react-window (virtual scrolling)
 
-### 🏗️ 아키텍처 개요
+### 🏗️ Architecture Overview
 ```
 ┌─────────────────────────────────────┐
 │  React Frontend (TypeScript)        │
-│  - Zustand Store (상태 관리)         │
-│  - Virtual Scrolling (성능 최적화)    │
+│  - Zustand Store (State Management) │
+│  - Virtual Scrolling (Performance)  │
 │  - Radix UI + Tailwind CSS          │
 └──────────────┬──────────────────────┘
                │ Tauri IPC
 ┌──────────────▼──────────────────────┐
 │  Rust Backend (Tauri Commands)      │
-│  - JSONL 파일 파싱                   │
-│  - 프로젝트/세션 스캔                 │
-│  - 메시지 검색 및 필터링               │
+│  - JSONL File Parsing               │
+│  - Project/Session Scanning         │
+│  - Message Search & Filtering       │
 └─────────────────────────────────────┘
                │
 ┌──────────────▼──────────────────────┐
 │  ~/.claude/projects/                │
 │  ├── [project-name]/                │
-│  │   └── *.jsonl (대화 히스토리)     │
+│  │   └── *.jsonl (Conversation)     │
 └─────────────────────────────────────┘
 ```
 
-### 🚀 주요 기능
-1. **프로젝트/세션 탐색**: `~/.claude` 디렉토리의 모든 프로젝트와 세션을 트리 구조로 표시
-2. **메시지 뷰어**: 대화 내역을 시간순으로 표시 (가상 스크롤링으로 대용량 데이터 처리)
-3. **도구 사용 분석**: Tool use/result, 파일 읽기/쓰기, 명령 실행 결과 등을 구조화하여 표시
-4. **토큰 사용량 추적**: Assistant 메시지의 입력/출력 토큰, 캐시 사용량 표시
-5. **메시지 검색**: 전체 대화 내역에서 키워드 검색
+### 🚀 Key Features
+1. **Project/Session Explorer**: Display all projects and sessions from `~/.claude` in a tree structure
+2. **Message Viewer**: Show conversation history chronologically (virtual scrolling for large datasets)
+3. **Tool Usage Analysis**: Display tool use/results, file operations, and command execution results in structured format
+4. **Token Usage Tracking**: Show input/output tokens and cache usage from assistant messages
+5. **Message Search**: Keyword search across entire conversation history
 
-### 📊 데이터 소스
-- **위치**: `~/.claude/projects/[project-name]/*.jsonl`
-- **형식**: JSONL (줄당 하나의 JSON 객체)
-- **메시지 타입**: `user`, `assistant`, `system`, `summary`
-- **콘텐츠 타입**: `text`, `tool_use`, `tool_result`, `thinking`, `image` (일부 미지원)
+### 📊 Data Source
+- **Location**: `~/.claude/projects/[project-name]/*.jsonl`
+- **Format**: JSONL (one JSON object per line)
+- **Message Types**: `user`, `assistant`, `system`, `summary`
+- **Content Types**: `text`, `tool_use`, `tool_result`, `thinking`, `image` (some unsupported)
 
-### 🎨 UI 특징
-- 주로 한국어 인터페이스
-- Claude 브랜드 컬러 사용 (Tailwind 커스텀 설정)
-- 반응형 레이아웃
-- 다크 모드 미지원 (현재)
+### 🎨 UI Characteristics
+- Primarily Korean language interface
+- Claude brand colors (Tailwind custom configuration)
+- Responsive layout
+- Dark mode not yet supported
 
 ---
 
