@@ -46,7 +46,7 @@ hex = "0.4.3"
 # Search indexing dependencies
 tantivy = "0.22"
 jieba-rs = "0.7"
-lindera = { version = "0.33", features = ["ipadic", "ko-dic"] }
+lindera = { version = "1.4.1", features = ["embedded-ipadic", "embedded-ko-dic"] }
 
 [dev-dependencies]
 tempfile = "3.10.1"

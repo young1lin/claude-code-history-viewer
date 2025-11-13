@@ -1,6 +1,8 @@
 use jieba_rs::Jieba;
+use lindera::dictionary::{load_embedded_dictionary, DictionaryKind};
+use lindera::mode::Mode;
+use lindera::segmenter::Segmenter;
 use lindera::tokenizer::Tokenizer as LinderaTokenizer;
-use lindera::mode::Mode as LinderaMode;
 use regex::Regex;
 use std::sync::Arc;
 
@@ -18,22 +20,20 @@ impl MultilingualTokenizer {
         let jieba = Arc::new(Jieba::new());
 
         // Initialize Japanese tokenizer (lindera with ipadic)
-        let japanese_tokenizer = LinderaTokenizer::new(
-            LinderaMode::Normal,
-            lindera::DictionaryConfig {
-                kind: Some(lindera::DictionaryKind::IPADIC),
-                path: None,
-            },
-        ).ok();
+        let japanese_tokenizer = load_embedded_dictionary(DictionaryKind::IPADIC)
+            .ok()
+            .map(|dict| {
+                let segmenter = Segmenter::new(Mode::Normal, dict, None);
+                LinderaTokenizer::new(segmenter)
+            });
 
         // Initialize Korean tokenizer (lindera with ko-dic)
-        let korean_tokenizer = LinderaTokenizer::new(
-            LinderaMode::Normal,
-            lindera::DictionaryConfig {
-                kind: Some(lindera::DictionaryKind::KoDic),
-                path: None,
-            },
-        ).ok();
+        let korean_tokenizer = load_embedded_dictionary(DictionaryKind::KoDic)
+            .ok()
+            .map(|dict| {
+                let segmenter = Segmenter::new(Mode::Normal, dict, None);
+                LinderaTokenizer::new(segmenter)
+            });
 
         // Pattern to detect code blocks and preserve them
         let code_pattern = Regex::new(r"```[\s\S]*?```|`[^`]+`|\w+\.\w+|\S+@\S+").unwrap();
@@ -145,9 +145,13 @@ impl MultilingualTokenizer {
             Language::Japanese => {
                 if let Some(ref tokenizer) = self.japanese_tokenizer {
                     tokenizer.tokenize(text)
-                        .into_iter()
-                        .map(|t| t.text.to_string())
-                        .collect()
+                        .ok()
+                        .map(|tokens| {
+                            tokens.into_iter()
+                                .map(|t| t.surface.to_string())
+                                .collect()
+                        })
+                        .unwrap_or_else(|| vec![text.to_string()])
                 } else {
                     vec![text.to_string()]
                 }
@@ -155,9 +159,13 @@ impl MultilingualTokenizer {
             Language::Korean => {
                 if let Some(ref tokenizer) = self.korean_tokenizer {
                     tokenizer.tokenize(text)
-                        .into_iter()
-                        .map(|t| t.text.to_string())
-                        .collect()
+                        .ok()
+                        .map(|tokens| {
+                            tokens.into_iter()
+                                .map(|t| t.surface.to_string())
+                                .collect()
+                        })
+                        .unwrap_or_else(|| vec![text.to_string()])
                 } else {
                     vec![text.to_string()]
                 }
