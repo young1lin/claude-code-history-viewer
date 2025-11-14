@@ -134,6 +134,41 @@ export interface SearchFilters {
   hasFileChanges?: boolean;
 }
 
+// FTS5 搜索相关类型
+export interface FtsSearchFilters {
+  project_name?: string;
+  message_type?: string;
+  start_date?: string;
+  end_date?: string;
+}
+
+export interface SearchResult {
+  uuid: string;
+  content: string;
+  message_type: string;
+  project_name: string;
+  project_path: string;
+  session_id: string;
+  file_path: string;
+  timestamp: string;
+  rank: number;
+}
+
+export interface SyncProgress {
+  total_files: number;
+  processed_files: number;
+  total_messages: number;
+  is_syncing: boolean;
+  current_file?: string;
+}
+
+export interface SyncStatus {
+  last_sync_time?: string;
+  total_messages: number;
+  total_files: number;
+  needs_sync: boolean;
+}
+
 export interface MessageNode {
   message: ClaudeMessage;
   children: MessageNode[];
@@ -183,6 +218,14 @@ export interface AppState {
   searchQuery: string;
   searchResults: ClaudeMessage[];
   searchFilters: SearchFilters;
+  // FTS5 搜索状态
+  ftsSearchQuery: string;
+  ftsSearchResults: SearchResult[];
+  ftsSearchFilters: FtsSearchFilters;
+  syncStatus: SyncStatus | null;
+  syncProgress: SyncProgress | null;
+  isSyncing: boolean;
+  isSearching: boolean;
   isLoading: boolean; // 전체 앱 초기화용
   isLoadingProjects: boolean;
   isLoadingSessions: boolean;

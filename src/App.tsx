@@ -4,8 +4,10 @@ import { MessageViewer } from "./components/MessageViewer";
 import { TokenStatsViewer } from "./components/TokenStatsViewer";
 import { AnalyticsDashboard } from "./components/AnalyticsDashboard";
 import { SimpleUpdateManager } from "./components/SimpleUpdateManager";
+import { SearchResultsViewer } from "./components/SearchResultsViewer";
 import { useAppStore } from "./store/useAppStore";
 import { useAnalytics } from "./hooks/useAnalytics";
+import type { SearchResult } from "./types";
 
 import { useTranslation } from "react-i18next";
 import { AppErrorType, type ClaudeSession, type ClaudeProject } from "./types";
@@ -34,10 +36,15 @@ function App() {
     error,
     sessionTokenStats,
     projectTokenStats,
+    ftsSearchQuery,
+    ftsSearchResults,
+    isSearching,
     initializeApp,
     selectProject,
     selectSession,
     loadMoreMessages,
+    getSyncStatus,
+    clearFtsSearch,
   } = useAppStore();
 
   const {
@@ -57,6 +64,34 @@ function App() {
     // useAnalytics hook의 useEffect에서 자동으로 데이터 업데이트 처리
   };
 
+  // 处理搜索结果点击 - 跳转到对应会话
+  const handleSearchResultClick = async (result: SearchResult) => {
+    // 找到对应的项目
+    const project = projects.find((p) => p.path === result.project_path);
+    if (!project) {
+      console.error("Project not found for search result");
+      return;
+    }
+
+    // 如果项目不同，先选择项目
+    if (selectedProject?.path !== project.path) {
+      await selectProject(project);
+    }
+
+    // 找到对应的会话
+    const session = sessions.find((s) => s.file_path === result.file_path);
+    if (!session) {
+      console.error("Session not found for search result");
+      return;
+    }
+
+    // 选择会话
+    await selectSession(session);
+
+    // 清除搜索
+    clearFtsSearch();
+  };
+
   useEffect(() => {
     // 언어 설정 로드 후 앱 초기화
     loadLanguage()
@@ -69,6 +104,13 @@ function App() {
         initializeApp();
       });
   }, [initializeApp, loadLanguage]);
+
+  // 启动时检查同步状态
+  useEffect(() => {
+    if (projects.length > 0) {
+      getSyncStatus();
+    }
+  }, [projects, getSyncStatus]);
 
   // i18n 언어 변경 감지
   useEffect(() => {
@@ -200,7 +242,8 @@ function App() {
             {/* Content Header */}
             {(selectedSession ||
               computed.isTokenStatsView ||
-              computed.isAnalyticsView) && (
+              computed.isAnalyticsView ||
+              ftsSearchQuery) && (
               <div
                 className={cn(
                   "p-4 border-b",
@@ -216,7 +259,9 @@ function App() {
                         COLORS.ui.text.primary
                       )}
                     >
-                      {computed.isAnalyticsView
+                      {ftsSearchQuery
+                        ? "搜索结果"
+                        : computed.isAnalyticsView
                         ? tComponents("analytics.dashboard")
                         : computed.isTokenStatsView
                         ? tMessages("tokenStats.title")
@@ -258,7 +303,14 @@ function App() {
 
             {/* Content */}
             <div className="flex-1 overflow-hidden">
-              {computed.isAnalyticsView ? (
+              {ftsSearchQuery ? (
+                <SearchResultsViewer
+                  results={ftsSearchResults}
+                  query={ftsSearchQuery}
+                  isLoading={isSearching}
+                  onResultClick={handleSearchResultClick}
+                />
+              ) : computed.isAnalyticsView ? (
                 <div className="h-full overflow-y-auto">
                   <AnalyticsDashboard />
                 </div>

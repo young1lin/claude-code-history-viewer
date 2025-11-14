@@ -13,6 +13,10 @@ import {
   type SessionComparison,
   type AppError,
   AppErrorType,
+  type FtsSearchFilters,
+  type SearchResult,
+  type SyncStatus,
+  type SyncProgress,
 } from "../types";
 import {
   type AnalyticsState,
@@ -70,6 +74,13 @@ interface AppStore extends AppState {
   setAnalyticsSessionComparisonError: (error: string | null) => void;
   resetAnalytics: () => void;
   clearAnalyticsErrors: () => void;
+
+  // FTS5 搜索和同步 actions
+  getSyncStatus: () => Promise<void>;
+  syncToDatabase: () => Promise<void>;
+  searchMessagesFts: (query: string, filters?: FtsSearchFilters) => Promise<void>;
+  clearFtsSearch: () => void;
+  setFtsSearchFilters: (filters: FtsSearchFilters) => void;
 }
 
 const DEFAULT_PAGE_SIZE = 20; // 초기 로딩 시 20개 메시지만 로드하여 빠른 로딩
@@ -92,6 +103,14 @@ export const useAppStore = create<AppStore>((set, get) => ({
   searchQuery: "",
   searchResults: [],
   searchFilters: {},
+  // FTS5 搜索状态
+  ftsSearchQuery: "",
+  ftsSearchResults: [],
+  ftsSearchFilters: {},
+  syncStatus: null,
+  syncProgress: null,
+  isSyncing: false,
+  isSearching: false,
   isLoading: false,
   isLoadingProjects: false,
   isLoadingSessions: false,
@@ -598,5 +617,78 @@ export const useAppStore = create<AppStore>((set, get) => ({
         sessionComparisonError: null,
       },
     }));
+  },
+
+  // FTS5 搜索和同步 actions
+  getSyncStatus: async () => {
+    const { claudePath } = get();
+    if (!claudePath) return;
+
+    try {
+      const status = await invoke<SyncStatus>("get_sync_status", {
+        claudePath,
+      });
+      set({ syncStatus: status });
+    } catch (error) {
+      console.error("Failed to get sync status:", error);
+    }
+  },
+
+  syncToDatabase: async () => {
+    const { claudePath } = get();
+    if (!claudePath) return;
+
+    set({ isSyncing: true, error: null });
+    try {
+      const progress = await invoke<SyncProgress>("sync_messages_to_db", {
+        claudePath,
+      });
+      set({ syncProgress: progress, isSyncing: false });
+
+      // 同步完成后更新状态
+      await get().getSyncStatus();
+    } catch (error) {
+      console.error("Failed to sync messages:", error);
+      set({
+        error: { type: AppErrorType.UNKNOWN, message: String(error) },
+        isSyncing: false,
+      });
+    }
+  },
+
+  searchMessagesFts: async (query: string, filters: FtsSearchFilters = {}) => {
+    const { claudePath } = get();
+    if (!claudePath || !query.trim()) {
+      set({ ftsSearchResults: [], ftsSearchQuery: "" });
+      return;
+    }
+
+    set({ isSearching: true, ftsSearchQuery: query });
+    try {
+      const results = await invoke<SearchResult[]>("search_messages_fts", {
+        claudePath,
+        query,
+        filters,
+        limit: 100,
+      });
+      set({ ftsSearchResults: results });
+    } catch (error) {
+      console.error("Failed to search messages:", error);
+      set({ error: { type: AppErrorType.UNKNOWN, message: String(error) } });
+    } finally {
+      set({ isSearching: false });
+    }
+  },
+
+  clearFtsSearch: () => {
+    set({
+      ftsSearchQuery: "",
+      ftsSearchResults: [],
+      ftsSearchFilters: {},
+    });
+  },
+
+  setFtsSearchFilters: (filters: FtsSearchFilters) => {
+    set({ ftsSearchFilters: filters });
   },
 }));

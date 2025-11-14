@@ -1,8 +1,9 @@
 mod models;
 mod commands;
 mod utils;
+mod db;
 
-use crate::commands::{project::*, session::*, stats::*, update::*, secure_update::*, feedback::*};
+use crate::commands::{project::*, session::*, stats::*, update::*, secure_update::*, feedback::*, search::*};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -15,6 +16,7 @@ pub fn run() {
         .plugin(tauri_plugin_http::init())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_os::init())
+        .manage(SyncState::default())
         .invoke_handler(tauri::generate_handler![
                         get_claude_folder_path,
             validate_claude_folder,
@@ -33,7 +35,11 @@ pub fn run() {
             verify_download_integrity,
             send_feedback,
             get_system_info,
-            open_github_issues
+            open_github_issues,
+            get_sync_status,
+            sync_messages_to_db,
+            get_sync_progress,
+            search_messages_fts
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

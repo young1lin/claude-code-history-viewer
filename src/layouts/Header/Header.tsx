@@ -4,7 +4,11 @@ import {
   BarChart3,
   MessageSquare,
   Activity,
+  Search,
+  Database,
+  X,
 } from "lucide-react";
+import { useState } from "react";
 
 import { TooltipButton } from "@/shared/TooltipButton";
 import { useAppStore } from "@/store/useAppStore";
@@ -25,7 +29,16 @@ export const Header = () => {
     selectedSession,
     isLoadingMessages,
     refreshCurrentSession,
+    syncStatus,
+    isSyncing,
+    searchMessagesFts,
+    clearFtsSearch,
+    syncToDatabase,
+    getSyncStatus,
   } = useAppStore();
+
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showSearchInput, setShowSearchInput] = useState(false);
 
   const {
     actions: analyticsActions,
@@ -56,6 +69,26 @@ export const Header = () => {
     }
   };
 
+  // 搜索处理
+  const handleSearch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!searchQuery.trim()) return;
+
+    await searchMessagesFts(searchQuery);
+  };
+
+  // 清除搜索
+  const handleClearSearch = () => {
+    setSearchQuery("");
+    clearFtsSearch();
+    setShowSearchInput(false);
+  };
+
+  // 同步到数据库
+  const handleSync = async () => {
+    await syncToDatabase();
+  };
+
   return (
     <header
       className={cn(
@@ -82,22 +115,108 @@ export const Header = () => {
         </div>
 
         <div className="flex items-center space-x-4">
-          {selectedProject && (
-            <div className={cn("text-sm", COLORS.ui.text.tertiary)}>
-              <span className="font-medium">{selectedProject.name}</span>
-              {selectedSession && (
-                <>
-                  <span className="mx-2">›</span>
-                  <span>
-                    {tComponents("session.title")}{" "}
-                    {selectedSession.session_id.slice(-8)}
-                  </span>
-                </>
+          {/* 搜索框 */}
+          {showSearchInput ? (
+            <form onSubmit={handleSearch} className="flex items-center gap-2">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="搜索消息..."
+                className={cn(
+                  "px-3 py-1.5 rounded-lg border text-sm w-64",
+                  "focus:outline-none focus:ring-2 focus:ring-blue-500",
+                  COLORS.ui.background.primary,
+                  COLORS.ui.border.light,
+                  COLORS.ui.text.primary
+                )}
+                autoFocus
+              />
+              <TooltipButton
+                type="submit"
+                content="搜索"
+                className={cn(
+                  "p-2 rounded-lg transition-colors",
+                  COLORS.ui.interactive.hover
+                )}
+              >
+                <Search className="w-4 h-4" />
+              </TooltipButton>
+              <TooltipButton
+                type="button"
+                onClick={handleClearSearch}
+                content="关闭"
+                className={cn(
+                  "p-2 rounded-lg transition-colors",
+                  COLORS.ui.interactive.hover
+                )}
+              >
+                <X className="w-4 h-4" />
+              </TooltipButton>
+            </form>
+          ) : (
+            <>
+              {selectedProject && (
+                <div className={cn("text-sm", COLORS.ui.text.tertiary)}>
+                  <span className="font-medium">{selectedProject.name}</span>
+                  {selectedSession && (
+                    <>
+                      <span className="mx-2">›</span>
+                      <span>
+                        {tComponents("session.title")}{" "}
+                        {selectedSession.session_id.slice(-8)}
+                      </span>
+                    </>
+                  )}
+                </div>
               )}
-            </div>
+            </>
           )}
 
           <div className="flex items-center space-x-2">
+            {/* 搜索按钮 */}
+            <TooltipButton
+              onClick={() => setShowSearchInput(!showSearchInput)}
+              className={cn(
+                "p-2 rounded-lg transition-colors",
+                showSearchInput
+                  ? COLORS.semantic.info.bgDark
+                  : COLORS.ui.interactive.hover
+              )}
+              content="搜索"
+            >
+              <Search className={cn("w-5 h-5", COLORS.ui.text.primary)} />
+            </TooltipButton>
+
+            {/* 同步按钮 */}
+            <TooltipButton
+              onClick={handleSync}
+              disabled={isSyncing}
+              className={cn(
+                "p-2 rounded-lg transition-colors relative disabled:opacity-50 disabled:cursor-not-allowed",
+                COLORS.ui.interactive.hover
+              )}
+              content={
+                isSyncing
+                  ? "同步中..."
+                  : syncStatus?.needs_sync
+                  ? `需要同步 (${syncStatus.total_messages} 条消息)`
+                  : `已同步 (${syncStatus?.total_messages || 0} 条消息)`
+              }
+            >
+              {isSyncing ? (
+                <Loader2
+                  className={cn("w-5 h-5 animate-spin", COLORS.ui.text.primary)}
+                />
+              ) : (
+                <>
+                  <Database className={cn("w-5 h-5", COLORS.ui.text.primary)} />
+                  {syncStatus?.needs_sync && (
+                    <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full" />
+                  )}
+                </>
+              )}
+            </TooltipButton>
             {selectedProject && (
               <>
                 <TooltipButton
