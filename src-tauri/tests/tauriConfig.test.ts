@@ -191,11 +191,6 @@ describe('Tauri Configuration Tests', () => {
     });
 
     it('should only contain valid capability strings', () => {
-      const validCapabilities = [
-        'default', 'http-requests', 'fs', 'shell', 
-        'notification', 'updater', 'window-management'
-      ];
-      
       config.app.security.capabilities.forEach((capability: string) => {
         expect(typeof capability).toBe('string');
         expect(capability.length).toBeGreaterThan(0);
