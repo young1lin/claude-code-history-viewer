@@ -34,7 +34,6 @@ export const Header = () => {
     searchMessagesFts,
     clearFtsSearch,
     syncToDatabase,
-    getSyncStatus,
   } = useAppStore();
 
   const [searchQuery, setSearchQuery] = useState("");

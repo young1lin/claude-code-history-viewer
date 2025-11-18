@@ -1,9 +1,7 @@
-import { useAppStore } from "@/store/useAppStore";
 import type { SearchResult } from "@/types";
 import { cn } from "@/utils/cn";
 import { COLORS } from "@/constants/colors";
 import { Clock, FileText, Folder, MessageSquare } from "lucide-react";
-import { useTranslation } from "react-i18next";
 
 interface SearchResultsViewerProps {
   results: SearchResult[];
@@ -18,7 +16,6 @@ export function SearchResultsViewer({
   isLoading,
   onResultClick,
 }: SearchResultsViewerProps) {
-  const { t } = useTranslation("common");
 
   // 高亮搜索关键词
   const highlightText = (text: string, query: string) => {
@@ -59,6 +56,8 @@ export function SearchResultsViewer({
       .trim();
 
     const firstWord = cleanQuery.split(/\s+/)[0];
+    if (!firstWord) return content.slice(0, maxLength) + "...";
+
     const index = content.toLowerCase().indexOf(firstWord.toLowerCase());
 
     if (index !== -1) {
