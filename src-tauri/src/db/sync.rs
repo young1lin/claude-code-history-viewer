@@ -23,9 +23,9 @@ pub struct SyncStatus {
     pub needs_sync: bool,
 }
 
-/// 获取同步状态
+/// Get sync status
 pub fn get_sync_status(conn: &Connection, claude_path: &str) -> Result<SyncStatus> {
-    // 获取数据库中的同步元数据
+    // Get sync metadata from database
     let mut stmt = conn.prepare(
         "SELECT last_sync_time, total_messages, total_files FROM sync_metadata WHERE id = 1"
     )?;
@@ -43,12 +43,12 @@ pub fn get_sync_status(conn: &Connection, claude_path: &str) -> Result<SyncStatu
         Err(_) => (None, 0, 0),
     };
 
-    // 检查文件系统中是否有更新
+    // Check if there are updates in the file system
     let projects_path = PathBuf::from(claude_path).join("projects");
     let mut needs_sync = last_sync_time.is_none();
 
     if projects_path.exists() && !needs_sync {
-        // 获取所有文件的修改时间
+        // Get modification times of all files
         let file_statuses = get_file_sync_statuses(conn)?;
 
         for entry in WalkDir::new(&projects_path)
@@ -63,14 +63,14 @@ pub fn get_sync_status(conn: &Connection, claude_path: &str) -> Result<SyncStatu
                     let modified_time: chrono::DateTime<Utc> = modified.into();
                     let modified_str = modified_time.to_rfc3339();
 
-                    // 检查文件是否需要同步
+                    // Check if file needs to be synced
                     if let Some(stored_time) = file_statuses.get(&file_path) {
                         if &modified_str > stored_time {
                             needs_sync = true;
                             break;
                         }
                     } else {
-                        // 新文件
+                        // New file
                         needs_sync = true;
                         break;
                     }
@@ -103,7 +103,7 @@ fn get_file_sync_statuses(conn: &Connection) -> Result<HashMap<String, String>> 
     Ok(statuses)
 }
 
-/// 增量同步消息到数据库
+/// Incremental sync messages to database
 pub fn sync_messages<F>(
     conn: &mut Connection,
     claude_path: &str,
@@ -124,10 +124,10 @@ where
         });
     }
 
-    // 获取现有的文件同步状态
+    // Get existing file sync status
     let file_statuses = get_file_sync_statuses(conn)?;
 
-    // 收集需要同步的文件
+    // Collect files that need to be synced
     let mut files_to_sync = Vec::new();
 
     for entry in WalkDir::new(&projects_path)
@@ -142,11 +142,11 @@ where
                 let modified_time: chrono::DateTime<Utc> = modified.into();
                 let modified_str = modified_time.to_rfc3339();
 
-                // 检查是否需要同步此文件
+                // Check if file needs to be synced
                 let needs_sync = if let Some(stored_time) = file_statuses.get(&file_path) {
                     &modified_str > stored_time
                 } else {
-                    true // 新文件
+                    true // New file
                 };
 
                 if needs_sync {
@@ -160,11 +160,11 @@ where
     let mut processed_files = 0;
     let mut total_messages = 0;
 
-    // 开始事务以提高性能
+    // Start transaction to improve performance
     let tx = conn.transaction()?;
 
     for (file_path, modified_time, path) in files_to_sync {
-        // 发送进度更新
+        // Send progress update
         progress_callback(SyncProgress {
             total_files,
             processed_files,
@@ -173,13 +173,13 @@ where
             current_file: Some(file_path.clone()),
         });
 
-        // 删除该文件的旧数据
+        // Delete old data for this file
         tx.execute(
             "DELETE FROM messages_fts WHERE file_path = ?1",
             [&file_path],
         )?;
 
-        // 读取并插入新数据
+        // Read and insert new data
         if let Ok(content) = fs::read_to_string(&path) {
             let project_name = path
                 .parent()
@@ -200,33 +200,33 @@ where
                 }
 
                 if let Ok(log_entry) = serde_json::from_str::<RawLogEntry>(line) {
-                    // 跳过 summary 类型
+                    // Skip summary type
                     if log_entry.message_type == "summary" {
                         continue;
                     }
 
-                    // 提取内容
+                    // Extract content
                     let content_text = if let Some(ref msg) = log_entry.message {
                         extract_content_text(&msg.content)
                     } else {
                         String::new()
                     };
 
-                    // 提取工具使用文本
+                    // Extract tool use text
                     let tool_use_text = if let Some(ref tool_use) = log_entry.tool_use {
                         serde_json::to_string(tool_use).unwrap_or_default()
                     } else {
                         String::new()
                     };
 
-                    // 提取工具结果文本
+                    // Extract tool result text
                     let tool_result_text = if let Some(ref tool_result) = log_entry.tool_use_result {
                         extract_tool_result_text(tool_result)
                     } else {
                         String::new()
                     };
 
-                    // 插入到 FTS5 表
+                    // Insert into FTS5 table
                     tx.execute(
                         "INSERT INTO messages_fts (
                             uuid, content, message_type, project_name, project_path,
@@ -251,7 +251,7 @@ where
                 }
             }
 
-            // 更新文件同步状态
+            // Update file sync status
             tx.execute(
                 "INSERT OR REPLACE INTO file_sync_status (file_path, last_modified, message_count, last_sync_time)
                  VALUES (?1, ?2, ?3, ?4)",
@@ -267,7 +267,7 @@ where
         processed_files += 1;
     }
 
-    // 更新同步元数据
+    // Update sync metadata
     let now = Utc::now().to_rfc3339();
     let total_messages_in_db: usize = tx.query_row(
         "SELECT COUNT(*) FROM messages_fts",
@@ -301,7 +301,7 @@ where
     Ok(final_progress)
 }
 
-/// 从 content JSON 提取纯文本
+/// Extract pure text from content JSON
 fn extract_content_text(content: &serde_json::Value) -> String {
     match content {
         serde_json::Value::String(s) => s.clone(),
@@ -338,7 +338,7 @@ fn extract_content_text(content: &serde_json::Value) -> String {
     }
 }
 
-/// 从 tool_use_result JSON 提取纯文本
+/// Extract pure text from tool_use_result JSON
 fn extract_tool_result_text(result: &serde_json::Value) -> String {
     let mut texts = Vec::new();
 

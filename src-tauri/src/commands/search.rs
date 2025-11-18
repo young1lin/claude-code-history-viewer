@@ -2,7 +2,7 @@ use crate::db::{get_connection, sync, search};
 use std::sync::Mutex;
 use tauri::State;
 
-// 全局状态，用于跟踪同步进度
+// Global state for tracking sync progress
 pub struct SyncState {
     pub progress: Mutex<Option<sync::SyncProgress>>,
 }
@@ -15,7 +15,7 @@ impl Default for SyncState {
     }
 }
 
-/// 获取同步状态
+/// Get sync status
 #[tauri::command]
 pub async fn get_sync_status(claude_path: String) -> Result<sync::SyncStatus, String> {
     let conn = get_connection(&claude_path)
@@ -25,7 +25,7 @@ pub async fn get_sync_status(claude_path: String) -> Result<sync::SyncStatus, St
         .map_err(|e| format!("Failed to get sync status: {}", e))
 }
 
-/// 同步消息到数据库
+/// Sync messages to database
 #[tauri::command]
 pub async fn sync_messages_to_db(
     claude_path: String,
@@ -41,7 +41,7 @@ pub async fn sync_messages_to_db(
     })
     .map_err(|e| format!("Failed to sync messages: {}", e))?;
 
-    // 清除进度状态
+    // Clear progress state
     if let Ok(mut state_progress) = state.progress.lock() {
         *state_progress = None;
     }
@@ -49,7 +49,7 @@ pub async fn sync_messages_to_db(
     Ok(result)
 }
 
-/// 获取当前同步进度
+/// Get current sync progress
 #[tauri::command]
 pub async fn get_sync_progress(
     state: State<'_, SyncState>,
@@ -61,7 +61,7 @@ pub async fn get_sync_progress(
         .map_err(|e| format!("Failed to get sync progress: {}", e))
 }
 
-/// 执行 FTS5 搜索
+/// Execute FTS5 search
 #[tauri::command]
 pub async fn search_messages_fts(
     claude_path: String,

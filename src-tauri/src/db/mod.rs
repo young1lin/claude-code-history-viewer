@@ -4,16 +4,16 @@ pub mod search;
 use rusqlite::{Connection, Result};
 use std::path::PathBuf;
 
-/// 获取数据库文件路径
+/// Get database file path
 pub fn get_db_path(claude_path: &str) -> PathBuf {
     PathBuf::from(claude_path).join("search.db")
 }
 
-/// 初始化数据库，创建必要的表
+/// Initialize database, create necessary tables
 pub fn init_database(db_path: &PathBuf) -> Result<Connection> {
     let conn = Connection::open(db_path)?;
 
-    // 创建 FTS5 全文搜索表
+    // Create FTS5 full-text search table
     conn.execute(
         "CREATE VIRTUAL TABLE IF NOT EXISTS messages_fts USING fts5(
             uuid UNINDEXED,
@@ -31,7 +31,7 @@ pub fn init_database(db_path: &PathBuf) -> Result<Connection> {
         [],
     )?;
 
-    // 创建同步元数据表
+    // Create sync metadata table
     conn.execute(
         "CREATE TABLE IF NOT EXISTS sync_metadata (
             id INTEGER PRIMARY KEY CHECK (id = 1),
@@ -42,7 +42,7 @@ pub fn init_database(db_path: &PathBuf) -> Result<Connection> {
         [],
     )?;
 
-    // 创建文件同步状态表（用于增量同步）
+    // Create file sync status table (for incremental sync)
     conn.execute(
         "CREATE TABLE IF NOT EXISTS file_sync_status (
             file_path TEXT PRIMARY KEY,
@@ -56,7 +56,7 @@ pub fn init_database(db_path: &PathBuf) -> Result<Connection> {
     Ok(conn)
 }
 
-/// 获取或创建数据库连接
+/// Get or create database connection
 pub fn get_connection(claude_path: &str) -> Result<Connection> {
     let db_path = get_db_path(claude_path);
     init_database(&db_path)

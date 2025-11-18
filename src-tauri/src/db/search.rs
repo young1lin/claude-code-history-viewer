@@ -22,7 +22,7 @@ pub struct SearchFilters {
     pub end_date: Option<String>,
 }
 
-/// 执行 FTS5 全文搜索
+/// Execute FTS5 full-text search
 pub fn search_messages(
     conn: &Connection,
     query: &str,
@@ -33,10 +33,10 @@ pub fn search_messages(
         return Ok(Vec::new());
     }
 
-    // 构建搜索查询
+    // Build search query
     let fts_query = prepare_fts_query(query);
 
-    // 构建 SQL 查询
+    // Build SQL query
     let mut sql = String::from(
         "SELECT
             uuid, content, message_type, project_name, project_path,
@@ -48,7 +48,7 @@ pub fn search_messages(
     let mut params: Vec<Box<dyn rusqlite::ToSql>> = vec![Box::new(fts_query)];
     let mut param_idx = 2;
 
-    // 添加过滤条件
+    // Add filter conditions
     if let Some(ref f) = filters {
         if let Some(ref project) = f.project_name {
             sql.push_str(&format!(" AND project_name = ?{}", param_idx));
@@ -75,12 +75,12 @@ pub fn search_messages(
         }
     }
 
-    // 按相关性排序并限制结果数量
+    // Sort by relevance and limit result count
     sql.push_str(&format!(" ORDER BY rank LIMIT {}", limit));
 
     let mut stmt = conn.prepare(&sql)?;
 
-    // 转换参数为引用
+    // Convert parameters to references
     let param_refs: Vec<&dyn rusqlite::ToSql> = params.iter().map(|p| p.as_ref()).collect();
 
     let results = stmt.query_map(&param_refs[..], |row| {
@@ -105,35 +105,35 @@ pub fn search_messages(
     Ok(search_results)
 }
 
-/// 准备 FTS5 查询字符串
-/// 支持多种搜索模式：
-/// - 普通词语: "react"
-/// - 短语搜索: "\"react hooks\""
-/// - 前缀搜索: "react*"
-/// - 多词 AND: "react hooks"
-/// - 多词 OR: "react OR vue"
-/// - 排除: "react NOT typescript"
+/// Prepare FTS5 query string
+/// Supports multiple search modes:
+/// - Single word: "react"
+/// - Phrase search: "\"react hooks\""
+/// - Prefix search: "react*"
+/// - Multiple words AND: "react hooks"
+/// - Multiple words OR: "react OR vue"
+/// - Exclude: "react NOT typescript"
 fn prepare_fts_query(query: &str) -> String {
     let query = query.trim();
 
-    // 如果用户已经使用了 FTS5 操作符，直接返回
+    // If user has already used FTS5 operators, return directly
     if query.contains(" OR ") || query.contains(" AND ") || query.contains(" NOT ") {
         return query.to_string();
     }
 
-    // 如果是短语搜索（用引号包围），直接返回
+    // If it's a phrase search (surrounded by quotes), return directly
     if (query.starts_with('"') && query.ends_with('"'))
         || (query.starts_with('\'') && query.ends_with('\''))
     {
         return query.to_string();
     }
 
-    // 如果包含通配符，直接返回
+    // If it contains wildcards, return directly
     if query.contains('*') {
         return query.to_string();
     }
 
-    // 默认行为：将空格分隔的词语用 AND 连接，并为每个词添加前缀匹配
+    // Default behavior: join words separated by spaces with AND and add prefix matching for each word
     let words: Vec<&str> = query.split_whitespace().collect();
 
     if words.is_empty() {
@@ -141,11 +141,11 @@ fn prepare_fts_query(query: &str) -> String {
     }
 
     if words.len() == 1 {
-        // 单个词，添加前缀匹配支持
+        // Single word, add prefix matching support
         return format!("{}*", words[0]);
     }
 
-    // 多个词，用 AND 连接，每个词添加前缀匹配
+    // Multiple words, join with AND and add prefix matching for each word
     words
         .iter()
         .map(|w| format!("{}*", w))
