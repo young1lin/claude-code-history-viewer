@@ -1,182 +1,231 @@
-# 🔍 FTS5 模糊搜索功能说明
+# 🔍 Full-Text Search Feature
 
-## 功能概述
+## Overview
 
-基于 SQLite FTS5 的全文搜索功能，支持快速搜索 Claude Code 对话历史。
+SQLite FTS5-powered full-text search for quickly searching Claude Code conversation history.
 
-## 核心特性
+## Core Features
 
-- ✅ **增量同步**: 只同步修改过的文件，高效节省时间
-- ✅ **全文索引**: 搜索消息内容、工具使用、工具结果
-- ✅ **模糊匹配**: 支持前缀搜索 (`react*` 匹配 `react`, `reactive`, `reactivity`)
-- ✅ **高级语法**: 支持 AND/OR/NOT 操作符、短语搜索
-- ✅ **智能高亮**: 自动高亮搜索关键词
-- ✅ **快速跳转**: 点击搜索结果直接跳转到对应会话
+- ✅ **Incremental Sync**: Only syncs modified files for efficient time-saving
+- ✅ **Full-Text Indexing**: Search message content, tool usage, and tool results
+- ✅ **Fuzzy Matching**: Prefix search support (`react*` matches `react`, `reactive`, `reactivity`)
+- ✅ **Advanced Syntax**: AND/OR/NOT operators, phrase search
+- ✅ **Smart Highlighting**: Automatic keyword highlighting in results
+- ✅ **Quick Navigation**: Click search results to jump directly to the conversation
 
-## 使用流程
+## Usage Guide
 
-### 1. 首次使用 - 同步数据
+### 1. Initial Setup - Sync Data
 
-点击 Header 右侧的 **💾 数据库图标**：
+Click the **💾 Database Icon** on the right side of the Header:
 
 ```
 ┌─────────────────────────────────────┐
-│  Logo     项目/会话  [🔍] [💾] ...  │
+│  Logo    Project/Session  [🔍] [💾] │
 └─────────────────────────────────────┘
                             ↑
-                       点击此按钮同步
+                     Click to sync
 ```
 
-- 首次同步会扫描所有 JSONL 文件
-- 进度会实时显示
-- 同步完成后数据库文件保存在 `~/.claude/search.db`
+- First sync will scan all JSONL files
+- Progress updates shown in real-time
+- Database saved at `~/.claude/search.db` after sync completes
 
-### 2. 搜索对话
+### 2. Search Conversations
 
-1. 点击 **🔍 搜索图标** 展开搜索框
-2. 输入关键词
-3. 按 **Enter** 执行搜索
-4. 浏览搜索结果
+1. Click the **🔍 Search Icon** to expand the search box
+2. Enter your keywords
+3. Press **Enter** to execute the search
+4. Browse through the search results
 
-### 3. 查看详情
+### 3. View Details
 
-点击任意搜索结果卡片：
-- 自动选择对应项目
-- 自动选择对应会话
-- 显示完整对话内容
+Click any search result card to:
+- Automatically select the corresponding project
+- Automatically select the corresponding session
+- Display the complete conversation content
 
-## 搜索语法示例
+## Search Syntax Examples
 
-### 基础搜索
+### Basic Search
 ```
-react           → 查找包含 "react" 的消息
-useEffect       → 查找包含 "useEffect" 的消息
-```
-
-### 前缀匹配
-```
-react*          → 匹配 react, reactivity, reactive 等
-use*            → 匹配 useState, useEffect, useCallback 等
+react           → Find messages containing "react"
+useEffect       → Find messages containing "useEffect"
 ```
 
-### 短语搜索
+### Prefix Matching
 ```
-"useState hook"    → 精确匹配短语
-"error handling"   → 精确匹配短语
-```
-
-### 逻辑组合
-```
-react AND hooks           → 同时包含两个词
-react OR vue              → 包含任意一个词
-react NOT typescript      → 包含 react 但不包含 typescript
+react*          → Matches react, reactivity, reactive, etc.
+use*            → Matches useState, useEffect, useCallback, etc.
 ```
 
-### 复杂查询
+### Phrase Search
 ```
-(react OR vue) AND hooks     → 布尔逻辑组合
-"state management" AND redux → 短语 + 关键词
+"useState hook"    → Exact phrase match
+"error handling"   → Exact phrase match
 ```
 
-## UI 界面说明
+### Logical Combinations
+```
+react AND hooks           → Contains both words
+react OR vue              → Contains either word
+react NOT typescript      → Contains react but not typescript
+```
 
-### Header 按钮状态
+### Complex Queries
+```
+(react OR vue) AND hooks     → Boolean logic combinations
+"state management" AND redux → Phrase + keyword
+```
 
-**🔍 搜索按钮**
-- 灰色: 未激活
-- 蓝色: 搜索框已展开
+## UI Interface
 
-**💾 同步按钮**
-- 灰色图标: 已同步
-- 红点标记: 有新数据需要同步
-- 旋转图标: 正在同步
+### Header Button States
 
-### 搜索结果卡片
+**🔍 Search Button**
+- Gray: Inactive
+- Blue: Search box expanded
+
+**💾 Sync Button**
+- Gray icon: Synced
+- Red dot badge: New data needs syncing
+- Spinning icon: Syncing in progress
+
+### Search Result Cards
 
 ```
 ┌──────────────────────────────────────┐
-│ 📁 项目名 • 👤 用户/助手              │
+│ 📁 Project Name • 👤 User/Assistant  │
 │                                       │
-│ ...匹配的文本片段...（关键词高亮）     │
+│ ...matched text snippet...           │
+│ (keywords highlighted)                │
 │                                       │
-│ 🕒 2025-06-15 14:30  相关度: 0.85    │
+│ 🕒 2025-06-15 14:30  Rank: 0.85     │
 └──────────────────────────────────────┘
 ```
 
-## 性能说明
+## Performance
 
-- **搜索速度**: 通常 < 100ms (取决于数据量)
-- **同步速度**:
-  - 首次全量同步: ~1-2秒/千条消息
-  - 增量同步: ~0.1-0.5秒/百条新消息
-- **存储空间**: 约为原始 JSONL 文件的 30-50%
+- **Search Speed**: Typically < 100ms (depends on data volume)
+- **Sync Speed**:
+  - Initial full sync: ~1-2 seconds per 1,000 messages
+  - Incremental sync: ~0.1-0.5 seconds per 100 new messages
+- **Storage**: Approximately 30-50% of original JSONL file size
 
-## 数据库位置
+## Database Location
 
 ```
 ~/.claude/search.db
 ```
 
-可以安全删除此文件，下次同步会重新创建。
+This file can be safely deleted; it will be recreated on the next sync.
 
-## 故障排除
+## Troubleshooting
 
-### 搜索无结果？
-1. 确认已点击同步按钮
-2. 检查 `~/.claude/search.db` 是否存在
-3. 尝试重新同步
+### No Search Results?
+1. Confirm you've clicked the sync button
+2. Check if `~/.claude/search.db` exists
+3. Try syncing again
 
-### 同步按钮一直显示红点？
-- 这表示有新对话未同步
-- 点击同步按钮更新索引
+### Sync Button Always Shows Red Dot?
+- This indicates new conversations haven't been synced
+- Click the sync button to update the index
 
-### 搜索结果不完整？
-- 可能是数据未完全同步
-- 手动点击同步按钮
+### Incomplete Search Results?
+- Data may not be fully synced
+- Manually click the sync button
 
-## 技术细节
+## Technical Details
 
-### 数据库结构
+### Database Schema
 
 ```sql
--- FTS5 全文搜索表
+-- FTS5 full-text search table
 CREATE VIRTUAL TABLE messages_fts USING fts5(
     uuid UNINDEXED,
-    content,              -- 消息内容 (可搜索)
+    content,              -- Message content (searchable)
     message_type UNINDEXED,
-    project_name,         -- 项目名 (可搜索)
+    project_name,         -- Project name (searchable)
+    project_path UNINDEXED,
     session_id UNINDEXED,
     file_path UNINDEXED,
     timestamp UNINDEXED,
-    tool_use_text,        -- 工具使用 (可搜索)
-    tool_result_text,     -- 工具结果 (可搜索)
+    tool_use_text,        -- Tool usage (searchable)
+    tool_result_text,     -- Tool results (searchable)
     tokenize = 'porter unicode61'
+);
+
+-- Sync metadata table
+CREATE TABLE sync_metadata (
+    id INTEGER PRIMARY KEY CHECK (id = 1),
+    last_sync_time TEXT NOT NULL,
+    total_messages INTEGER NOT NULL,
+    total_files INTEGER NOT NULL
+);
+
+-- File sync status table (for incremental sync)
+CREATE TABLE file_sync_status (
+    file_path TEXT PRIMARY KEY,
+    last_modified TEXT NOT NULL,
+    message_count INTEGER NOT NULL,
+    last_sync_time TEXT NOT NULL
 );
 ```
 
-### 增量同步机制
+### Incremental Sync Mechanism
 
-系统跟踪每个 JSONL 文件的 `last_modified` 时间：
-- 新文件: 完全索引
-- 修改文件: 删除旧索引，重新索引
-- 未修改文件: 跳过
+The system tracks each JSONL file's `last_modified` timestamp:
+- **New files**: Fully indexed
+- **Modified files**: Old index deleted, then re-indexed
+- **Unmodified files**: Skipped
 
-### 搜索优化
+### Search Optimization
 
-- 自动添加前缀匹配 (`*`) 支持模糊搜索
-- 多词自动用 `AND` 连接
-- 使用 FTS5 的 `rank` 进行相关性排序
+- Automatically adds prefix matching (`*`) for fuzzy search
+- Multiple words automatically joined with `AND`
+- Uses FTS5's `rank` for relevance sorting
 
-## 未来改进方向
+## Implementation Status
 
-- [ ] 搜索历史记录
-- [ ] 高级过滤器 (按日期、项目、类型)
-- [ ] 搜索结果导出
-- [ ] 实时搜索建议
-- [ ] 搜索统计分析
+### ✅ Completed Features
 
-## 相关文件
+**Backend (Rust/SQLite)**
+- FTS5 full-text search engine
+- Database initialization and schema design
+- Incremental sync with file change detection
+- File sync status tracking
+- Search query optimization (prefix matching, logical operators)
+- Search filters (project, message type, date range)
+- Tauri command registration
 
-- 后端: `src-tauri/src/db/`
-- 前端: `src/components/SearchResultsViewer.tsx`
-- 状态管理: `src/store/useAppStore.ts`
+**Frontend (React/TypeScript)**
+- Search input box and UI
+- Search results display component
+- Keyword highlighting
+- Click-to-navigate functionality
+- Sync status display and trigger
+- State management (Zustand)
+- Loading state handling
+
+### 🚀 Future Enhancements
+
+- [ ] Search history
+- [ ] Advanced filter UI (date picker, project selector, type filter)
+- [ ] Search result export (JSON/CSV)
+- [ ] Real-time search suggestions
+- [ ] Search analytics and statistics
+
+## Related Files
+
+**Backend:**
+- `src-tauri/src/db/mod.rs` - Database connection management
+- `src-tauri/src/db/search.rs` - FTS5 search implementation
+- `src-tauri/src/db/sync.rs` - Incremental sync implementation
+- `src-tauri/src/commands/search.rs` - Tauri command interface
+
+**Frontend:**
+- `src/components/SearchResultsViewer.tsx` - Search results display
+- `src/layouts/Header/Header.tsx` - Search box and sync button
+- `src/store/useAppStore.ts` - Search state management
+- `src/App.tsx` - Search integration
+- `src/types/index.ts` - Type definitions
