@@ -567,5 +567,25 @@
     "readyToInstall": "準備安裝",
     "viewOnGitHub": "在GitHub上查看",
     "downloadProgress": "{{progress}}% 完成"
+  },
+  "search": {
+    "title": "搜尋結果",
+    "searching": "搜尋中...",
+    "noResults": "未找到包含 \"{{query}}\" 的訊息",
+    "noQuery": "輸入關鍵字開始搜尋",
+    "foundResults": "找到 {{count}} 則結果",
+    "foundResults_plural": "找到 {{count}} 則結果",
+    "searchQuery": "搜尋: \"{{query}}\"",
+    "user": "使用者",
+    "assistant": "助手",
+    "relevance": "相關度: {{rank}}",
+    "searchPlaceholder": "搜尋訊息...",
+    "searchButton": "搜尋",
+    "closeButton": "關閉",
+    "syncButton": "同步",
+    "syncing": "同步中...",
+    "needsSync": "需要同步 ({{count}} 則訊息)",
+    "synced": "已同步 ({{count}} 則訊息)",
+    "synced_plural": "已同步 ({{count}} 則訊息)"
   }
 }

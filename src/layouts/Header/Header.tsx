@@ -68,7 +68,7 @@ export const Header = () => {
     }
   };
 
-  // 搜索处理
+  // Handle search
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!searchQuery.trim()) return;
@@ -76,14 +76,14 @@ export const Header = () => {
     await searchMessagesFts(searchQuery);
   };
 
-  // 清除搜索
+  // Clear search
   const handleClearSearch = () => {
     setSearchQuery("");
     clearFtsSearch();
     setShowSearchInput(false);
   };
 
-  // 同步到数据库
+  // Sync to database
   const handleSync = async () => {
     await syncToDatabase();
   };
@@ -114,14 +114,14 @@ export const Header = () => {
         </div>
 
         <div className="flex items-center space-x-4">
-          {/* 搜索框 */}
+          {/* Search input */}
           {showSearchInput ? (
             <form onSubmit={handleSearch} className="flex items-center gap-2">
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="搜索消息..."
+                placeholder={tComponents("search.searchPlaceholder")}
                 className={cn(
                   "px-3 py-1.5 rounded-lg border text-sm w-64",
                   "focus:outline-none focus:ring-2 focus:ring-blue-500",
@@ -133,7 +133,7 @@ export const Header = () => {
               />
               <TooltipButton
                 type="submit"
-                content="搜索"
+                content={tComponents("search.searchButton")}
                 className={cn(
                   "p-2 rounded-lg transition-colors",
                   COLORS.ui.interactive.hover
@@ -144,7 +144,7 @@ export const Header = () => {
               <TooltipButton
                 type="button"
                 onClick={handleClearSearch}
-                content="关闭"
+                content={tComponents("search.closeButton")}
                 className={cn(
                   "p-2 rounded-lg transition-colors",
                   COLORS.ui.interactive.hover
@@ -173,7 +173,7 @@ export const Header = () => {
           )}
 
           <div className="flex items-center space-x-2">
-            {/* 搜索按钮 */}
+            {/* Search button */}
             <TooltipButton
               onClick={() => setShowSearchInput(!showSearchInput)}
               className={cn(
@@ -182,12 +182,12 @@ export const Header = () => {
                   ? COLORS.semantic.info.bgDark
                   : COLORS.ui.interactive.hover
               )}
-              content="搜索"
+              content={tComponents("search.searchButton")}
             >
               <Search className={cn("w-5 h-5", COLORS.ui.text.primary)} />
             </TooltipButton>
 
-            {/* 同步按钮 */}
+            {/* Sync button */}
             <TooltipButton
               onClick={handleSync}
               disabled={isSyncing}
@@ -197,10 +197,14 @@ export const Header = () => {
               )}
               content={
                 isSyncing
-                  ? "同步中..."
+                  ? tComponents("search.syncing")
                   : syncStatus?.needs_sync
-                  ? `需要同步 (${syncStatus.total_messages} 条消息)`
-                  : `已同步 (${syncStatus?.total_messages || 0} 条消息)`
+                  ? tComponents("search.needsSync", {
+                      count: syncStatus.total_messages,
+                    })
+                  : tComponents("search.synced", {
+                      count: syncStatus?.total_messages || 0,
+                    })
               }
             >
               {isSyncing ? (

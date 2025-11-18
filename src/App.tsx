@@ -64,31 +64,31 @@ function App() {
     // useAnalytics hook의 useEffect에서 자동으로 데이터 업데이트 처리
   };
 
-  // 处理搜索结果点击 - 跳转到对应会话
+  // Handle search result click - navigate to corresponding session
   const handleSearchResultClick = async (result: SearchResult) => {
-    // 找到对应的项目
+    // Find the corresponding project
     const project = projects.find((p) => p.path === result.project_path);
     if (!project) {
       console.error("Project not found for search result");
       return;
     }
 
-    // 如果项目不同，先选择项目
+    // If project is different, select it first
     if (selectedProject?.path !== project.path) {
       await selectProject(project);
     }
 
-    // 找到对应的会话
+    // Find the corresponding session
     const session = sessions.find((s) => s.file_path === result.file_path);
     if (!session) {
       console.error("Session not found for search result");
       return;
     }
 
-    // 选择会话
+    // Select the session
     await selectSession(session);
 
-    // 清除搜索
+    // Clear search
     clearFtsSearch();
   };
 
@@ -105,7 +105,7 @@ function App() {
       });
   }, [initializeApp, loadLanguage]);
 
-  // 启动时检查同步状态
+  // Check sync status on startup
   useEffect(() => {
     if (projects.length > 0) {
       getSyncStatus();
@@ -260,7 +260,7 @@ function App() {
                       )}
                     >
                       {ftsSearchQuery
-                        ? "搜索结果"
+                        ? tComponents("search.title")
                         : computed.isAnalyticsView
                         ? tComponents("analytics.dashboard")
                         : computed.isTokenStatsView

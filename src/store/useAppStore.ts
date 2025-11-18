@@ -75,7 +75,7 @@ interface AppStore extends AppState {
   resetAnalytics: () => void;
   clearAnalyticsErrors: () => void;
 
-  // FTS5 搜索和同步 actions
+  // FTS5 search and sync actions
   getSyncStatus: () => Promise<void>;
   syncToDatabase: () => Promise<void>;
   searchMessagesFts: (query: string, filters?: FtsSearchFilters) => Promise<void>;
@@ -103,7 +103,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
   searchQuery: "",
   searchResults: [],
   searchFilters: {},
-  // FTS5 搜索状态
+  // FTS5 search state
   ftsSearchQuery: "",
   ftsSearchResults: [],
   ftsSearchFilters: {},
@@ -619,7 +619,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
     }));
   },
 
-  // FTS5 搜索和同步 actions
+  // FTS5 search and sync actions
   getSyncStatus: async () => {
     const { claudePath } = get();
     if (!claudePath) return;
@@ -645,7 +645,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
       });
       set({ syncProgress: progress, isSyncing: false });
 
-      // 同步完成后更新状态
+      // Update status after sync completes
       await get().getSyncStatus();
     } catch (error) {
       console.error("Failed to sync messages:", error);

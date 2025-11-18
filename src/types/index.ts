@@ -134,7 +134,7 @@ export interface SearchFilters {
   hasFileChanges?: boolean;
 }
 
-// FTS5 搜索相关类型
+// FTS5 search related types
 export interface FtsSearchFilters {
   project_name?: string;
   message_type?: string;
@@ -218,7 +218,7 @@ export interface AppState {
   searchQuery: string;
   searchResults: ClaudeMessage[];
   searchFilters: SearchFilters;
-  // FTS5 搜索状态
+  // FTS5 search state
   ftsSearchQuery: string;
   ftsSearchResults: SearchResult[];
   ftsSearchFilters: FtsSearchFilters;

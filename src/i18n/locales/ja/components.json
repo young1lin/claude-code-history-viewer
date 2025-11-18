@@ -552,5 +552,25 @@
     "readyToInstall": "インストール準備完了",
     "viewOnGitHub": "GitHubで見る",
     "downloadProgress": "{{progress}}% 完了"
+  },
+  "search": {
+    "title": "検索結果",
+    "searching": "検索中...",
+    "noResults": "\"{{query}}\"を含むメッセージが見つかりません",
+    "noQuery": "キーワードを入力して検索を開始してください",
+    "foundResults": "{{count}}件の結果が見つかりました",
+    "foundResults_plural": "{{count}}件の結果が見つかりました",
+    "searchQuery": "検索: \"{{query}}\"",
+    "user": "ユーザー",
+    "assistant": "アシスタント",
+    "relevance": "関連度: {{rank}}",
+    "searchPlaceholder": "メッセージを検索...",
+    "searchButton": "検索",
+    "closeButton": "閉じる",
+    "syncButton": "同期",
+    "syncing": "同期中...",
+    "needsSync": "同期が必要です ({{count}}件のメッセージ)",
+    "synced": "同期済み ({{count}}件のメッセージ)",
+    "synced_plural": "同期済み ({{count}}件のメッセージ)"
   }
 }

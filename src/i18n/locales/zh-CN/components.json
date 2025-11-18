@@ -567,5 +567,25 @@
     "readyToInstall": "准备安装",
     "viewOnGitHub": "在GitHub上查看",
     "downloadProgress": "{{progress}}% 完成"
+  },
+  "search": {
+    "title": "搜索结果",
+    "searching": "搜索中...",
+    "noResults": "未找到包含 \"{{query}}\" 的消息",
+    "noQuery": "输入关键词开始搜索",
+    "foundResults": "找到 {{count}} 条结果",
+    "foundResults_plural": "找到 {{count}} 条结果",
+    "searchQuery": "搜索: \"{{query}}\"",
+    "user": "用户",
+    "assistant": "助手",
+    "relevance": "相关度: {{rank}}",
+    "searchPlaceholder": "搜索消息...",
+    "searchButton": "搜索",
+    "closeButton": "关闭",
+    "syncButton": "同步",
+    "syncing": "同步中...",
+    "needsSync": "需要同步 ({{count}} 条消息)",
+    "synced": "已同步 ({{count}} 条消息)",
+    "synced_plural": "已同步 ({{count}} 条消息)"
   }
 }

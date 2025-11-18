@@ -2,6 +2,7 @@ import type { SearchResult } from "@/types";
 import { cn } from "@/utils/cn";
 import { COLORS } from "@/constants/colors";
 import { Clock, FileText, Folder, MessageSquare } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface SearchResultsViewerProps {
   results: SearchResult[];
@@ -16,12 +17,13 @@ export function SearchResultsViewer({
   isLoading,
   onResultClick,
 }: SearchResultsViewerProps) {
+  const { t } = useTranslation("components");
 
-  // 高亮搜索关键词
+  // Highlight search keywords
   const highlightText = (text: string, query: string) => {
     if (!query.trim()) return text;
 
-    // 移除 FTS5 操作符
+    // Remove FTS5 operators
     const cleanQuery = query
       .replace(/\*/g, "")
       .replace(/"/g, "")
@@ -44,11 +46,11 @@ export function SearchResultsViewer({
     return highlightedText;
   };
 
-  // 截取内容显示片段
+  // Extract content snippet for display
   const getContentSnippet = (content: string, maxLength = 200) => {
     if (content.length <= maxLength) return content;
 
-    // 尝试找到关键词位置并显示周围内容
+    // Try to find keyword position and show surrounding content
     const cleanQuery = query
       .replace(/\*/g, "")
       .replace(/"/g, "")
@@ -70,7 +72,7 @@ export function SearchResultsViewer({
     return content.slice(0, maxLength) + "...";
   };
 
-  // 格式化时间
+  // Format timestamp
   const formatTime = (timestamp: string) => {
     try {
       const date = new Date(timestamp);
@@ -85,7 +87,7 @@ export function SearchResultsViewer({
       <div className="h-full flex items-center justify-center">
         <div className={cn("text-center", COLORS.ui.text.muted)}>
           <MessageSquare className="w-12 h-12 mx-auto mb-4 animate-pulse" />
-          <p>搜索中...</p>
+          <p>{t("search.searching")}</p>
         </div>
       </div>
     );
@@ -97,7 +99,9 @@ export function SearchResultsViewer({
         <div className={cn("text-center", COLORS.ui.text.muted)}>
           <MessageSquare className="w-12 h-12 mx-auto mb-4" />
           <p>
-            {query ? `未找到包含 "${query}" 的消息` : "输入关键词开始搜索"}
+            {query
+              ? t("search.noResults", { query })
+              : t("search.noQuery")}
           </p>
         </div>
       </div>
@@ -108,10 +112,10 @@ export function SearchResultsViewer({
     <div className="h-full overflow-y-auto p-6">
       <div className="mb-4">
         <h3 className={cn("text-lg font-semibold", COLORS.ui.text.primary)}>
-          找到 {results.length} 条结果
+          {t("search.foundResults", { count: results.length })}
         </h3>
         <p className={cn("text-sm mt-1", COLORS.ui.text.muted)}>
-          搜索: "{query}"
+          {t("search.searchQuery", { query })}
         </p>
       </div>
 
@@ -131,7 +135,7 @@ export function SearchResultsViewer({
                 COLORS.ui.border.light
               )}
             >
-              {/* 项目和会话信息 */}
+              {/* Project and session info */}
               <div className="flex items-center gap-2 mb-2 text-sm">
                 <Folder className="w-4 h-4" />
                 <span className={cn("font-medium", COLORS.ui.text.primary)}>
@@ -140,11 +144,13 @@ export function SearchResultsViewer({
                 <span className={cn(COLORS.ui.text.muted)}>•</span>
                 <FileText className="w-4 h-4" />
                 <span className={cn(COLORS.ui.text.secondary)}>
-                  {result.message_type === "user" ? "用户" : "助手"}
+                  {result.message_type === "user"
+                    ? t("search.user")
+                    : t("search.assistant")}
                 </span>
               </div>
 
-              {/* 内容片段 */}
+              {/* Content snippet */}
               <div
                 className={cn(
                   "mb-2 line-clamp-3",
@@ -153,14 +159,14 @@ export function SearchResultsViewer({
                 dangerouslySetInnerHTML={{ __html: highlightedSnippet }}
               />
 
-              {/* 时间戳 */}
+              {/* Timestamp */}
               <div className="flex items-center gap-2 text-xs">
                 <Clock className="w-3 h-3" />
                 <span className={cn(COLORS.ui.text.muted)}>
                   {formatTime(result.timestamp)}
                 </span>
                 <span className={cn("ml-auto", COLORS.ui.text.muted)}>
-                  相关度: {result.rank.toFixed(2)}
+                  {t("search.relevance", { rank: result.rank.toFixed(2) })}
                 </span>
               </div>
             </div>

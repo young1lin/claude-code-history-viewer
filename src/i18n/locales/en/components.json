@@ -552,5 +552,25 @@
     "readyToInstall": "Ready to install",
     "viewOnGitHub": "View on GitHub",
     "downloadProgress": "{{progress}}% complete"
+  },
+  "search": {
+    "title": "Search Results",
+    "searching": "Searching...",
+    "noResults": "No messages found containing \"{{query}}\"",
+    "noQuery": "Enter keywords to start searching",
+    "foundResults": "Found {{count}} result",
+    "foundResults_plural": "Found {{count}} results",
+    "searchQuery": "Search: \"{{query}}\"",
+    "user": "User",
+    "assistant": "Assistant",
+    "relevance": "Relevance: {{rank}}",
+    "searchPlaceholder": "Search messages...",
+    "searchButton": "Search",
+    "closeButton": "Close",
+    "syncButton": "Sync",
+    "syncing": "Syncing...",
+    "needsSync": "Needs sync ({{count}} messages)",
+    "synced": "Synced ({{count}} messages)",
+    "synced_plural": "Synced ({{count}} messages)"
   }
 }
